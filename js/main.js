@@ -509,48 +509,8 @@
   function runLoader(){
     return new Promise((resolve)=>{
       const loader = document.getElementById('loader');
-      const group = document.getElementById('sigGroup');
+      const sig = document.getElementById('loaderSig');
       document.body.classList.add('no-scroll');
-
-      if(typeof SIGNATURE_PATHS === 'undefined' || !SIGNATURE_PATHS.length || !window.gsap){
-        // fallback: simple fade
-        setTimeout(()=>{
-          gsap && gsap.to ? gsap.to(loader, { autoAlpha:0, duration:.6, onComplete: finish }) : finish();
-        }, 500);
-        return;
-      }
-
-      const NS = "http://www.w3.org/2000/svg";
-      const pathEls = SIGNATURE_PATHS.map(d=>{
-        const p = document.createElementNS(NS, "path");
-        p.setAttribute("d", d);
-        group.appendChild(p);
-        return p;
-      });
-
-      const lengths = pathEls.map(p => {
-        try{ return p.getTotalLength(); } catch(e){ return 100; }
-      });
-      pathEls.forEach((p,i)=>{
-        p.style.strokeDasharray = lengths[i];
-        p.style.strokeDashoffset = lengths[i];
-      });
-
-      const tl = gsap.timeline({ onComplete: ()=>{
-        setTimeout(()=>{
-          gsap.to(loader, {
-            yPercent: -100, duration: 1.0, ease: 'power4.inOut',
-            onComplete: finish
-          });
-        }, 260);
-      }});
-
-      let cursor = 0;
-      lengths.forEach((len, i)=>{
-        const dur = Math.max(0.14, Math.min(0.5, len / 2600));
-        tl.to(pathEls[i], { strokeDashoffset: 0, duration: dur, ease: 'power1.inOut' }, cursor);
-        cursor += dur * 0.72; // slight overlap between letters, like natural handwriting
-      });
 
       function finish(){
         loader.style.display = 'none';
@@ -558,10 +518,46 @@
         resolve();
       }
 
-      // Hard safety cap
+      function playReveal(){
+        if(!window.gsap){
+          sig.style.clipPath = 'inset(0 0% 0 0)';
+          sig.style.webkitClipPath = 'inset(0 0% 0 0)';
+          setTimeout(()=>{ finish(); }, 700);
+          return;
+        }
+        const state = { p: 100 };
+        const tl = gsap.timeline({ onComplete: finish });
+        tl.to(state, {
+          p: 0,
+          duration: 1.5,
+          ease: 'power2.inOut',
+          onUpdate: ()=>{
+            sig.style.clipPath = `inset(0 ${state.p}% 0 0)`;
+            sig.style.webkitClipPath = `inset(0 ${state.p}% 0 0)`;
+          }
+        })
+        .to({}, { duration: 0.4 }) // brief pause so the name can be read
+        .to(loader, {
+          yPercent: -100, duration: 1.0, ease: 'power4.inOut'
+        });
+      }
+
+      // Make sure the cursive webfont is actually loaded before revealing it,
+      // otherwise it briefly flashes in a fallback font. Falls back after 1.5s either way.
+      if(document.fonts && document.fonts.load){
+        const safety = setTimeout(playReveal, 1500);
+        document.fonts.load("128px 'Alex Brush'").then(()=>{
+          clearTimeout(safety);
+          playReveal();
+        }).catch(playReveal);
+      } else {
+        playReveal();
+      }
+
+      // Absolute hard safety cap
       setTimeout(()=>{
         if(loader.style.display !== 'none') finish();
-      }, 7000);
+      }, 6000);
     });
   }
 

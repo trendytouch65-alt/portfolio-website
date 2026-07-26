@@ -154,9 +154,16 @@ h1,h2,h3,h4{ font-family: var(--font-head); margin:0; font-weight: 700; letter-s
   background: radial-gradient(120% 140% at 50% 40%, #0c150e 0%, #060a07 45%, #030403 100%);
 }
 .loader__sig{
-  width: min(80vw, 620px);
-  height: auto;
-  filter: drop-shadow(0 0 22px var(--green-glow));
+  font-family: 'Alex Brush', cursive;
+  font-weight: 400;
+  font-size: clamp(44px, 10vw, 132px);
+  line-height: 1;
+  color: var(--green);
+  white-space: nowrap;
+  text-shadow: 0 0 26px var(--green-glow), 0 0 70px rgba(105,193,98,.28);
+  clip-path: inset(0 100% 0 0);
+  -webkit-clip-path: inset(0 100% 0 0);
+  padding: 0 4px;
 }
 .loader.is-done{ pointer-events:none; }
 
@@ -257,6 +264,7 @@ h1,h2,h3,h4{ font-family: var(--font-head); margin:0; font-weight: 700; letter-s
 }
 .hero__photo{
   width:100%; height:100%; object-fit: cover;
+  object-position: 68% center;
   filter: saturate(1.05) contrast(1.03);
 }
 .hero__badge{
